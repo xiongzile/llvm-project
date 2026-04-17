@@ -2054,6 +2054,7 @@ bool CIRGenItaniumCXXABI::isVirtualOffsetNeededForVTableField(
 mlir::Value CIRGenItaniumCXXABI::getVirtualBaseClassOffset(
     mlir::Location loc, CIRGenFunction &cgf, Address thisAddr,
     const CXXRecordDecl *classDecl, const CXXRecordDecl *baseClassDecl) {
+
   CIRGenBuilderTy &builder = cgf.getBuilder();
   mlir::Value vtablePtr = cgf.getVTablePtr(loc, thisAddr, classDecl);
   mlir::Value vtableBytePtr = builder.createBitcast(vtablePtr, cgm.uInt8PtrTy);
@@ -2067,8 +2068,11 @@ mlir::Value CIRGenItaniumCXXABI::getVirtualBaseClassOffset(
 
   mlir::Value vbaseOffset;
   if (cgm.getLangOpts().RelativeCXXABIVTables) {
-    assert(!cir::MissingFeatures::vtableRelativeLayout());
-    cgm.errorNYI(loc, "getVirtualBaseClassOffset: relative layout");
+    mlir::Value offsetPtr = builder.createBitcast(
+        vbaseOffsetPtr, builder.getPointerTo(cgm.sInt32Ty));
+    vbaseOffset = cgf.getBuilder().createLoad(
+        loc, Address(offsetPtr, cgm.sInt32Ty,
+                     CharUnits::fromQuantity(4))); // vbase.offset
   } else {
     mlir::Value offsetPtr = builder.createBitcast(
         vbaseOffsetPtr, builder.getPointerTo(cgm.ptrDiffTy));
