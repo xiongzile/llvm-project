@@ -467,6 +467,10 @@ public:
   std::vector<cir::CIRGlobalValueInterface> llvmUsed;
   std::vector<cir::CIRGlobalValueInterface> llvmCompilerUsed;
 
+  /// Emit type metadata for the given vtable using the given layout.
+  void emitVTableTypeMetadata(const CXXRecordDecl *rd, cir::GlobalOp vTable,
+                              const VTableLayout &vtLayout);
+
   mlir::Type getVTableComponentType();
   CIRGenVTables &getVTables() { return vtables; }
 

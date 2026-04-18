@@ -521,6 +521,7 @@ void CIRGenItaniumCXXABI::emitVTableDefinitions(CIRGenVTables &cgvt,
   [[maybe_unused]] auto vtableAsGlobalValue =
       dyn_cast<cir::CIRGlobalValueInterface>(*vtable);
   assert(vtableAsGlobalValue && "VTable must support CIRGlobalValueInterface");
+  bool isDeclarationForLinker = vtableAsGlobalValue.isDeclarationForLinker();
   // Always emit type metadata on non-available_externally definitions, and on
   // available_externally definitions if we are performing whole program
   // devirtualization. For WPD we need the type metadata on all vtable
@@ -528,9 +529,15 @@ void CIRGenItaniumCXXABI::emitVTableDefinitions(CIRGenVTables &cgvt,
   // defined in headers but with a strong definition only in a shared
   // library.
   assert(!cir::MissingFeatures::vtableEmitMetadata());
-  if (cgm.getCodeGenOpts().WholeProgramVTables) {
-    cgm.errorNYI(rd->getSourceRange(),
-                 "emitVTableDefinitions: WholeProgramVTables");
+  if (!isDeclarationForLinker || cgm.getCodeGenOpts().WholeProgramVTables) {
+    cgm.emitVTableTypeMetadata(rd, vtable, vtLayout);
+    // For available_externally definitions, add the vtable to
+    // @llvm.compiler.used so that it isn't deleted before whole program
+    // analysis.
+    if (isDeclarationForLinker) {
+      cgm.errorNYI(rd->getSourceRange(), "isDeclarationForLinker");
+      assert(cgm.getCodeGenOpts().WholeProgramVTables);
+    }
   }
 
   assert(!cir::MissingFeatures::vtableRelativeLayout());

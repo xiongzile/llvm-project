@@ -3509,3 +3509,11 @@ CIRGenModule::getAddrOfGlobalTemporary(const MaterializeTemporaryExpr *mte,
 
   return cv;
 }
+
+void CIRGenModule::emitVTableTypeMetadata(const CXXRecordDecl *rd,
+                                          cir::GlobalOp vTable,
+                                          const VTableLayout &vtLayout) {
+  if (!getCodeGenOpts().LTOUnit)
+    return;
+  errorNYI(rd->getSourceRange(), "emitVTableTypeMetadata");
+}
