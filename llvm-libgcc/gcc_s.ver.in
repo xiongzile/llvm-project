@@ -22,6 +22,105 @@
   #define GLOBAL_32BIT
 #endif
 
+#if defined(__x86_64__)
+
+/* x86_64-only consolidated version script.
+ * Keep one unique block per version tag to avoid duplicate version tag errors.
+ */
+
+GCC_3.0 {
+  __absvdi2;    __absvsi2;    __addvdi3; __addvsi3; __clear_cache; __ffsdi2;
+  __fixunsdfdi; __fixunssfdi; __mulvdi3; __mulvsi3; __negvdi2;     __negvsi2;
+  __subvdi3;    __subvsi3;
+  _Unwind_DeleteException;
+  _Unwind_ForcedUnwind;
+  _Unwind_GetDataRelBase;
+  _Unwind_GetLanguageSpecificData;
+  _Unwind_GetRegionStart;
+  _Unwind_GetTextRelBase;
+  _Unwind_RaiseException;
+  _Unwind_Resume;
+
+  /* GLOBAL_64BIT */
+  __ashlti3; __ashrti3;    __cmpti2;     __divti3;  __ffsti2;  __fixdfti;
+  __fixsfti; __fixunssfti; __floattidf;  __lshrti3; __modti3;  __multi3;
+  __negti2;  __ucmpti2;    __udivmodti4; __udivti3; __umodti3; __fixunsdfti;
+  __floattisf;
+
+  /* GLOBAL_X86 */
+  __fixunsxfdi;
+
+  /* !ARM_GNUEABIHF */
+  _Unwind_Find_FDE; _Unwind_GetGR; _Unwind_GetIP; _Unwind_SetGR; _Unwind_SetIP;
+
+  /* __x86_64__ */
+  __deregister_frame; __register_frame;
+  __fixunsxfti; __fixxfti; __floattixf;
+};
+
+GCC_3.3 {
+  _Unwind_GetCFA;
+  _Unwind_Resume_or_Rethrow;
+
+  /* !ARM_GNUEABIHF */
+  _Unwind_Backtrace;
+  _Unwind_FindEnclosingFunction;
+};
+
+GCC_3.3.1 {
+  __gcc_personality_v0;
+};
+
+GCC_3.4 {
+  __clzdi2; __ctzdi2; __paritydi2; __popcountdi2;
+
+  /* GLOBAL_64BIT */
+  __clzti2; __ctzti2; __parityti2; __popcountti2;
+};
+
+GCC_3.4.2 {
+  __enable_execute_stack;
+};
+
+GCC_3.4.4 {
+  __absvti2; __addvti3; __mulvti3; __negvti2; __subvti3;
+};
+
+GCC_4.0.0 {
+  __divdc3; __divsc3; __muldc3; __mulsc3; __powidf2; __powisf2;
+
+  /* GLOBAL_X86 / __x86_64__ */
+  __divxc3; __mulxc3; __powixf2;
+};
+
+GCC_4.2.0 {
+  /* GLOBAL_64BIT */
+  __floatuntidf; __floatuntisf;
+
+  /* !ARM_GNUEABIHF */
+  _Unwind_GetIPInfo;
+
+  /* __x86_64__ */
+  __floatuntixf;
+};
+
+GCC_4.3.0 {
+  __bswapdi2; __bswapsi2; __emutls_get_address;
+
+  /* __x86_64__ */
+  __divtc3; __multc3;
+};
+
+GCC_4.8.0 {
+  __cpu_indicator_init;
+};
+
+GCC_7.0.0 {
+  __divmodti4;
+};
+
+#else
+
 GCC_3.0 {
   __absvdi2;    __absvsi2;    __addvdi3; __addvsi3; __clear_cache; __ffsdi2;
   __fixunsdfdi; __fixunssfdi; __mulvdi3; __mulvsi3; __negvdi2;     __negvsi2;
@@ -154,4 +253,6 @@ GCC_4.3.0 { __bswapdi2; __bswapsi2; __emutls_get_address;                 };
 
   GCC_4.2.0 { __floatuntixf; };
   GCC_4.3.0 { __divtc3; __multc3; };
+#endif
+
 #endif
