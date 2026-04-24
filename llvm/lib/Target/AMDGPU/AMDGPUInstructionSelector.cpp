@@ -6418,6 +6418,65 @@ bool AMDGPUInstructionSelector::isFlatScratchBaseLegalSV(Register Addr) const {
   return VT->signBitIsZero(RHS) && VT->signBitIsZero(LHS);
 }
 
+bool AMDGPUInstructionSelector::IsSDWAOperand(Register reg) const {
+  if (!STI.hasSDWA())
+    return false;
+
+  MachineInstr *Def = getDefIgnoringCopies(reg, *MRI);
+  if (!Def)
+    return false;
+
+  switch (Def->getOpcode()) {
+  case AMDGPU::G_SEXT_INREG: {
+    if (!Def->getOperand(2).isImm())
+      return false;
+
+    int64_t Width = Def->getOperand(2).getImm();
+    return Width == 8 || Width == 16;
+  }
+
+  case AMDGPU::G_AND: {
+    const MachineOperand &RHS = Def->getOperand(2);
+
+    if (!RHS.isReg())
+      return false;
+
+    MachineInstr *RHSDef = getDefIgnoringCopies(RHS.getReg(), *MRI);
+    if (!RHSDef || RHSDef->getOpcode() != AMDGPU::G_CONSTANT)
+      return false;
+
+    const MachineOperand &Cst = RHSDef->getOperand(1);
+    if (!Cst.isCImm())
+      return false;
+
+    const APInt &Val = Cst.getCImm()->getValue();
+    return Val == 0xFF || Val == 0xFFFF;
+  }
+
+  case AMDGPU::G_ASHR:
+  case AMDGPU::G_LSHR: {
+    const MachineOperand &RHS = Def->getOperand(2);
+
+    if (!RHS.isReg())
+      return false;
+
+    MachineInstr *RHSDef = getDefIgnoringCopies(RHS.getReg(), *MRI);
+    if (!RHSDef || RHSDef->getOpcode() != AMDGPU::G_CONSTANT)
+      return false;
+
+    const MachineOperand &Cst = RHSDef->getOperand(1);
+    if (!Cst.isCImm())
+      return false;
+
+    const APInt &Val = Cst.getCImm()->getValue();
+    return Val.urem(8) == 0;
+  }
+
+  default:
+    return false;
+  }
+}
+
 // Check address value in SGPR/VGPR are legal for flat scratch in the form
 // of: SGPR + VGPR + Imm.
 bool AMDGPUInstructionSelector::isFlatScratchBaseLegalSVImm(

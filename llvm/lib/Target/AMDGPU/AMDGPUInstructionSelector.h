@@ -444,7 +444,7 @@ private:
   // Returns true if TargetOpcode::G_AND MachineInstr `MI`'s masking of the
   // shift amount operand's `ShAmtBits` bits is unneeded.
   bool isUnneededShiftMask(const MachineInstr &MI, unsigned ShAmtBits) const;
-
+  bool IsSDWAOperand(Register reg) const;
   /// Match a zero extend from a 32-bit value to 64-bits.
   Register matchZeroExtendFromS32(Register Reg) const;
   /// Match a sign extend from a 32-bit value to 64-bits.
