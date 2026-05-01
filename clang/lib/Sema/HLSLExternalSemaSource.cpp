@@ -277,12 +277,90 @@ static BuiltinTypeDeclBuilder setupTextureType(CXXRecordDecl *Decl, Sema &S,
       .addGatherCmpMethods(Dim);
 }
 
+/// Set up common members and attributes for RWTexture types
+static BuiltinTypeDeclBuilder setupRWTextureType(CXXRecordDecl *Decl, Sema &S,
+                                               ResourceClass RC, bool IsROV,
+                                               ResourceDimension Dim) {
+  return BuiltinTypeDeclBuilder(S, Decl)
+      .addGetDimensionsMethods(Dim)
+      .addTextureLoadMethods(Dim)
+      .addArraySubscriptOperators(Dim)
+      .addDefaultHandleConstructor()
+      .addCopyConstructor()
+      .addCopyAssignmentOperator()
+      .addStaticInitializationFunctions(false);
+}
+
+
 // Add a partial specialization for a template. The `TextureTemplate` is
 // `Texture<element_type>`, and it will be specialized for vectors:
 // `Texture<vector<element_type, element_count>>`.
 static ClassTemplatePartialSpecializationDecl *
 addVectorTexturePartialSpecialization(Sema &S, NamespaceDecl *HLSLNamespace,
                                       ClassTemplateDecl *TextureTemplate) {
+  ASTContext &AST = S.getASTContext();
+
+  // Create the template parameters: element_type and element_count.
+  auto *ElementType = TemplateTypeParmDecl::Create(
+      AST, HLSLNamespace, SourceLocation(), SourceLocation(), 0, 0,
+      &AST.Idents.get("element_type"), false, false);
+  auto *ElementCount = NonTypeTemplateParmDecl::Create(
+      AST, HLSLNamespace, SourceLocation(), SourceLocation(), 0, 1,
+      &AST.Idents.get("element_count"), AST.IntTy, false,
+      AST.getTrivialTypeSourceInfo(AST.IntTy));
+
+  auto *TemplateParams = TemplateParameterList::Create(
+      AST, SourceLocation(), SourceLocation(), {ElementType, ElementCount},
+      SourceLocation(), nullptr);
+
+  // Create the dependent vector type: vector<element_type, element_count>.
+  QualType VectorType = AST.getDependentSizedExtVectorType(
+      AST.getTemplateTypeParmType(0, 0, false, ElementType),
+      DeclRefExpr::Create(
+          AST, NestedNameSpecifierLoc(), SourceLocation(), ElementCount, false,
+          DeclarationNameInfo(ElementCount->getDeclName(), SourceLocation()),
+          AST.IntTy, VK_LValue),
+      SourceLocation());
+
+  // Create the partial specialization declaration.
+  QualType CanonInjectedTST =
+      AST.getCanonicalType(AST.getTemplateSpecializationType(
+          ElaboratedTypeKeyword::Class, TemplateName(TextureTemplate),
+          {TemplateArgument(VectorType)}, {}));
+
+  auto *PartialSpec = ClassTemplatePartialSpecializationDecl::Create(
+      AST, TagDecl::TagKind::Class, HLSLNamespace, SourceLocation(),
+      SourceLocation(), TemplateParams, TextureTemplate,
+      {TemplateArgument(VectorType)},
+      CanQualType::CreateUnsafe(CanonInjectedTST), nullptr);
+
+  // Set the template arguments as written.
+  TemplateArgument Arg(VectorType);
+  TemplateArgumentLoc ArgLoc =
+      S.getTrivialTemplateArgumentLoc(Arg, QualType(), SourceLocation());
+  TemplateArgumentListInfo ArgsInfo =
+      TemplateArgumentListInfo(SourceLocation(), SourceLocation());
+  ArgsInfo.addArgument(ArgLoc);
+  PartialSpec->setTemplateArgsAsWritten(
+      ASTTemplateArgumentListInfo::Create(AST, ArgsInfo));
+
+  PartialSpec->setImplicit(true);
+  PartialSpec->setLexicalDeclContext(HLSLNamespace);
+  PartialSpec->setHasExternalLexicalStorage();
+
+  // Add the partial specialization to the namespace and the class template.
+  HLSLNamespace->addDecl(PartialSpec);
+  TextureTemplate->AddPartialSpecialization(PartialSpec, nullptr);
+
+  return PartialSpec;
+}
+
+// Add a partial specialization for a template. The `TextureTemplate` is
+// `Texture<element_type>`, and it will be specialized for vectors:
+// `Texture<vector<element_type, element_count>>`.
+static ClassTemplatePartialSpecializationDecl *
+addVectorRWTexturePartialSpecialization(Sema &S, NamespaceDecl *HLSLNamespace,
+                                        ClassTemplateDecl *TextureTemplate) {
   ASTContext &AST = S.getASTContext();
 
   // Create the template parameters: element_type and element_count.
@@ -635,6 +713,25 @@ void HLSLExternalSemaSource::defineHLSLTypesWithForwardDeclarations() {
   onCompletion(PartialSpec, [this](CXXRecordDecl *Decl) {
     setupTextureType(Decl, *SemaPtr, ResourceClass::SRV, /*IsROV=*/false,
                      ResourceDimension::Dim2D)
+        .completeDefinition();
+  });
+
+  Decl = BuiltinTypeDeclBuilder(*SemaPtr, HLSLNamespace, "RWTexture1D")
+             .addSimpleTemplateParams({"element_type"}, {Float4Ty},
+                                      TypedBufferConcept)
+             .finalizeForwardDeclaration();
+
+  onCompletion(Decl, [this](CXXRecordDecl *Decl) {
+    setupRWTextureType(Decl, *SemaPtr, ResourceClass::UAV, /*IsROV=*/false,
+                     ResourceDimension::Dim1D)
+        .completeDefinition();
+  });
+
+  auto *RWPartialSpec = addVectorRWTexturePartialSpecialization(
+      *SemaPtr, HLSLNamespace, Decl->getDescribedClassTemplate());
+  onCompletion(RWPartialSpec, [this](CXXRecordDecl *Decl) {
+    setupTextureType(Decl, *SemaPtr, ResourceClass::UAV, /*IsROV=*/false,
+                     ResourceDimension::Dim1D)
         .completeDefinition();
   });
 }
