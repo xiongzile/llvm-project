@@ -805,8 +805,8 @@ set(files
   __ranges/zip_transform_view.h
   __ranges/zip_view.h
   __simd/abi.h
-  __simd/basic_simd.h
-  __simd/basic_simd_mask.h
+  __simd/basic_vec.h
+  __simd/basic_mask.h
   __simd/simd_flags.h
   __split_buffer
   __std_mbstate_t.h

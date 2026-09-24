@@ -20,7 +20,7 @@
 #if _LIBCPP_STD_VER >= 26
 
 _LIBCPP_BEGIN_NAMESPACE_STD
-namespace datapar {
+namespace simd {
 
 template <class _Tp>
 inline constexpr bool __is_vectorizable_type_v = __is_standard_integer_type_v<_Tp> || __is_character_type_v<_Tp>;

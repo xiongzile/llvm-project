@@ -6,8 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef _LIBCPP___SIMD_BASIC_SIMD_H
-#define _LIBCPP___SIMD_BASIC_SIMD_H
+#ifndef _LIBCPP___SIMD_basic_vec_H
+#define _LIBCPP___SIMD_basic_vec_H
+
+#include "basic_mask.h"
 
 #include <__assert>
 #include <__concepts/convertible_to.h>
@@ -15,7 +17,7 @@
 #include <__memory/assume_aligned.h>
 #include <__ranges/concepts.h>
 #include <__simd/abi.h>
-#include <__simd/basic_simd_mask.h>
+#include <__simd/basic_mask.h>
 #include <__simd/simd_flags.h>
 #include <__type_traits/is_arithmetic.h>
 #include <__type_traits/pack_utils.h>
@@ -27,15 +29,15 @@
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-namespace datapar {
+namespace simd {
 
 _LIBCPP_DIAGNOSTIC_PUSH
 _LIBCPP_CLANG_DIAGNOSTIC_IGNORED("-Wpsabi")
 template <class _Tp, class _Abi = __native_abi<_Tp>>
-class basic_simd {
+class basic_vec {
 public:
   using value_type = _Tp;
-  using mask_type  = basic_simd_mask<sizeof(_Tp), _Abi>;
+  using mask_type  = basic_mask<sizeof(_Tp), _Abi>;
   using abi_type   = _Abi;
 
 private:
@@ -59,7 +61,7 @@ private:
 public:
   static constexpr integral_constant<__simd_size_type, __simd_size_v<value_type, abi_type>> size{};
 
-  constexpr basic_simd() noexcept = default;
+  constexpr basic_vec() noexcept = default;
 
   // [simd.ctor]
   template <convertible_to<value_type> _Up, class _From = remove_cvref_t<_Up>>
@@ -67,7 +69,7 @@ public:
              (!is_arithmetic_v<_From> && !__constexpr_wrapper_like<_From>) ||
              (__constexpr_wrapper_like<_From> && is_arithmetic_v<remove_const_t<decltype(_From::value)>> &&
               bool_constant<(static_cast<value_type>(_From::value) == _From::value)>::value))
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd(_Up&& __value) noexcept : __data_{__broadcast(__value)} {}
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec(_Up&& __value) noexcept : __data_{__broadcast(__value)} {}
 
   // TODO: converting constructor
   // TODO: generator constructor
@@ -75,7 +77,7 @@ public:
   // TODO: mask flag constructortrue
 
   template <ranges::contiguous_range _Range, class... _Flags>
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd(_Range&& __range, simd_flags<_Flags...> = {}) noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec(_Range&& __range, flags<_Flags...> = {}) noexcept
     requires(ranges::size(__range) == size())
   {
     static_assert(__is_vectorizable_type_v<ranges::range_value_t<_Range>>, "Range has to be of a vectorizable type");
@@ -87,8 +89,8 @@ public:
   }
 
   template <ranges::contiguous_range _Range, class... _Flags>
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd(
-      _Range&& __range, const mask_type& __mask, simd_flags<_Flags...> = {}) noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec(
+      _Range&& __range, const mask_type& __mask, flags<_Flags...> = {}) noexcept
     requires(ranges::size(__range) == size())
   {
     static_assert(__is_vectorizable_type_v<ranges::range_value_t<_Range>>, "Range has to be of a vectorizable type");
@@ -100,7 +102,7 @@ public:
   }
 
   // libc++ extensions
-  _LIBCPP_ALWAYS_INLINE constexpr explicit basic_simd(__data_t __data) noexcept : __data_(__data) {}
+  _LIBCPP_ALWAYS_INLINE constexpr explicit basic_vec(__data_t __data) noexcept : __data_(__data) {}
 
   // [simd.subscr]
   _LIBCPP_HIDE_FROM_ABI constexpr value_type operator[](__simd_size_type __index) const noexcept {
@@ -110,14 +112,14 @@ public:
 
   // [simd.unary]
 
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd& operator++() noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec& operator++() noexcept
     requires requires(value_type __v) { ++__v; }
   {
     __data_ += 1;
     return *this;
   }
 
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd operator++(int) noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec operator++(int) noexcept
     requires requires(value_type __v) { __v++; }
   {
     auto __ret = *this;
@@ -125,14 +127,14 @@ public:
     return __ret;
   }
 
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd& operator--() noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec& operator--() noexcept
     requires requires(value_type __v) { --__v; }
   {
     __data_ -= 1;
     return *this;
   }
 
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd operator--(int) noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec operator--(int) noexcept
     requires requires(value_type __v) { __v--; }
   {
     auto __ret = *this;
@@ -146,154 +148,154 @@ public:
     return mask_type(!__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd operator~() const noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec operator~() const noexcept
     requires requires(value_type __v) { ~__v; }
   {
-    return basic_simd(~__data_);
+    return basic_vec(~__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd operator+() const noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec operator+() const noexcept
     requires requires(value_type __v) { +__v; }
   {
-    return basic_simd(+__data_);
+    return basic_vec(+__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI constexpr basic_simd operator-() const noexcept
+  _LIBCPP_HIDE_FROM_ABI constexpr basic_vec operator-() const noexcept
     requires requires(value_type __v) { -__v; }
   {
-    return basic_simd(-__data_);
+    return basic_vec(-__data_);
   }
 
   // [simd.binary]
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd operator+(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec operator+(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v + __v; }
   {
-    return basic_simd(__lhs.__data_ + __rhs.__data_);
+    return basic_vec(__lhs.__data_ + __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd operator-(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec operator-(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v - __v; }
   {
-    return basic_simd(__lhs.__data_ - __rhs.__data_);
+    return basic_vec(__lhs.__data_ - __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd operator*(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec operator*(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v * __v; }
   {
-    return basic_simd(__lhs.__data_ * __rhs.__data_);
+    return basic_vec(__lhs.__data_ * __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd operator/(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec operator/(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v / __v; }
   {
-    return basic_simd(__lhs.__data_ / __rhs.__data_);
+    return basic_vec(__lhs.__data_ / __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd operator%(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec operator%(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v % __v; }
   {
-    return basic_simd(__lhs.__data_ % __rhs.__data_);
+    return basic_vec(__lhs.__data_ % __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd operator&(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec operator&(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v & __v; }
   {
-    return basic_simd(__lhs.__data_ & __rhs.__data_);
+    return basic_vec(__lhs.__data_ & __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd operator|(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec operator|(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v | __v; }
   {
-    return basic_simd(__lhs.__data_ | __rhs.__data_);
+    return basic_vec(__lhs.__data_ | __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd operator^(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec operator^(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v ^ __v; }
   {
-    return basic_simd(__lhs.__data_ ^ __rhs.__data_);
+    return basic_vec(__lhs.__data_ ^ __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd
-  operator<<(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec
+  operator<<(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v << __v; }
   {
-    return basic_simd(__lhs.__data_ << __rhs.__data_);
+    return basic_vec(__lhs.__data_ << __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd
-  operator>>(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec
+  operator>>(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v << __v; }
   {
-    return basic_simd(__lhs.__data_ >> __rhs.__data_);
+    return basic_vec(__lhs.__data_ >> __rhs.__data_);
   }
 
   // [simd.cassign]
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator+=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator+=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v += __v; }
   {
     __lhs.__data_ = __lhs.__data_ + __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator-=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator-=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v -= __v; }
   {
     __lhs.__data_ = __lhs.__data_ - __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator*=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator*=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v *= __v; }
   {
     __lhs.__data_ = __lhs.__data_ * __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator/=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator/=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v /= __v; }
   {
     __lhs.__data_ = __lhs.__data_ / __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator%=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator%=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v %= __v; }
   {
     __lhs.__data_ = __lhs.__data_ % __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator&=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator&=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v &= __v; }
   {
     __lhs.__data_ = __lhs.__data_ & __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator|=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator|=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v |= __v; }
   {
     __lhs.__data_ = __lhs.__data_ | __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator^=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator^=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v ^= __v; }
   {
     __lhs.__data_ = __lhs.__data_ ^ __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator<<=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator<<=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v <<= __v; }
   {
     __lhs.__data_ = __lhs.__data_ << __rhs.__data_;
     return __lhs;
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_simd& operator>>=(basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr basic_vec& operator>>=(basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v >>= __v; }
   {
     __lhs.__data_ = __lhs.__data_ >> __rhs.__data_;
@@ -301,37 +303,37 @@ public:
   }
 
   // [simd.comparisons]
-  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator==(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator==(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v == __v; }
   {
     return mask_type(__lhs.__data_ == __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator!=(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator!=(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v != __v; }
   {
     return mask_type(!(__lhs.__data_ == __rhs.__data_));
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator<(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator<(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v < __v; }
   {
     return mask_type(__lhs.__data_ < __rhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator>=(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator>=(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v >= __v; }
   {
     return mask_type(__rhs.__data_ <= __lhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator>(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator>(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v > __v; }
   {
     return mask_type(__rhs.__data_ < __lhs.__data_);
   }
 
-  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator<=(const basic_simd& __lhs, const basic_simd& __rhs) noexcept
+  _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator<=(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v <= __v; }
   {
     return mask_type(__lhs.__data_ <= __rhs.__data_);
@@ -340,11 +342,11 @@ public:
 _LIBCPP_DIAGNOSTIC_POP
 
 template <class _Tp, __simd_size_type _Np = __simd_size_v<_Tp, __native_abi<_Tp>>>
-using simd = basic_simd<_Tp, __deduce_abi_t<_Tp, _Np>>;
+using vec = basic_vec<_Tp, __deduce_abi_t<_Tp, _Np>>;
 
 } // namespace datapar
 _LIBCPP_END_NAMESPACE_STD
 
 #endif // _LIBCPP_STD_VER >= 26
 
-#endif // _LIBCPP___SIMD_BASIC_SIMD_H
+#endif // _LIBCPP___SIMD_basic_vec_H

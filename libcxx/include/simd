@@ -12,8 +12,8 @@
 #include <__config>
 
 #if _LIBCPP_STD_VER >= 26
-#  include <__simd/basic_simd.h>
-#  include <__simd/basic_simd_mask.h>
+#  include <__simd/basic_vec.h>
+#  include <__simd/basic_mask.h>
 #  include <__simd/simd_flags.h>
 #endif
 

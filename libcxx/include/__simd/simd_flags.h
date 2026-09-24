@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef _LIBCPP___SIMD_SIMD_FLAGS_H
-#define _LIBCPP___SIMD_SIMD_FLAGS_H
+#ifndef _LIBCPP___SIMD_flags_H
+#define _LIBCPP___SIMD_flags_H
 
 #include <__algorithm/max.h>
 #include <__bit/has_single_bit.h>
@@ -18,7 +18,7 @@
 #if _LIBCPP_STD_VER >= 26
 
 _LIBCPP_BEGIN_NAMESPACE_STD
-namespace datapar {
+namespace simd {
 
 template <class>
 inline constexpr bool __is_flag_v = false;
@@ -55,52 +55,52 @@ inline constexpr size_t __get_align_for = std::max(1uz, __get_max_overaligned<_A
 
 template <class... _Flags>
   requires(__is_flag_v<_Flags> && ...)
-struct simd_flags {
+struct flags {
   template <class... _Args, class... _Result>
-  static consteval auto __copy_aligned(simd_flags<_Args...>, simd_flags<_Result...>) {
+  static consteval auto __copy_aligned(flags<_Args...>, flags<_Result...>) {
     if constexpr (__contains_type_v<__type_list<_Args...>, __aligned_flag>) {
-      return simd_flags<__aligned_flag, _Result...>{};
+      return flags<__aligned_flag, _Result...>{};
     } else {
-      return simd_flags<_Result...>{};
+      return flags<_Result...>{};
     }
   }
 
   template <class... _Args, class... _Result>
-  static consteval auto __copy_convert(simd_flags<_Args...>, simd_flags<_Result...>) {
+  static consteval auto __copy_convert(flags<_Args...>, flags<_Result...>) {
     if constexpr (__contains_type_v<__type_list<_Args...>, __convert_flag>) {
-      return simd_flags<__convert_flag, _Result...>{};
+      return flags<__convert_flag, _Result...>{};
     } else {
-      return simd_flags<_Result...>{};
+      return flags<_Result...>{};
     }
   }
 
   template <class... _Args, class... _Result>
-  static consteval auto __copy_overaligned(simd_flags<_Args...>, simd_flags<_Result...>) {
+  static consteval auto __copy_overaligned(flags<_Args...>, flags<_Result...>) {
     if constexpr (constexpr auto __max_align = __get_max_overaligned<_Args...>; __max_align > 0) {
-      return simd_flags<__overaligned_flag<__max_align>, _Result...>{};
+      return flags<__overaligned_flag<__max_align>, _Result...>{};
     } else {
-      return simd_flags<_Result...>{};
+      return flags<_Result...>{};
     }
   }
 
   template <class... _Other>
-  friend consteval auto operator|(simd_flags, simd_flags<_Other...>) {
-    using _Combined = simd_flags<_Flags..., _Other...>;
+  friend consteval auto operator|(flags, flags<_Other...>) {
+    using _Combined = flags<_Flags..., _Other...>;
     return __copy_overaligned(_Combined{}, __copy_convert(_Combined{}, __copy_aligned(_Combined{}, {})));
   }
 };
 
-inline constexpr simd_flags<> simd_flag_default{};
-inline constexpr simd_flags<__convert_flag> simd_flag_convert{};
-inline constexpr simd_flags<__aligned_flag> simd_flag_aligned{};
+inline constexpr flags<> simd_flag_default{};
+inline constexpr flags<__convert_flag> simd_flag_convert{};
+inline constexpr flags<__aligned_flag> simd_flag_aligned{};
 
 template <size_t _Np>
   requires(std::has_single_bit(_Np))
-inline constexpr simd_flags<__overaligned_flag<_Np>> simd_flag_overaligned{};
+inline constexpr flags<__overaligned_flag<_Np>> simd_flag_overaligned{};
 
 } // namespace datapar
 _LIBCPP_END_NAMESPACE_STD
 
 #endif // _LIBCPP_STD_VER >= 26
 
-#endif // _LIBCPP___SIMD_SIMD_FLAGS_H
+#endif // _LIBCPP___SIMD_flags_H
