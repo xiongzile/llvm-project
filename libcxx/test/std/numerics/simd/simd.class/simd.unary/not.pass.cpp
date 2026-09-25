@@ -19,7 +19,7 @@
 #include "type_algorithms.h"
 #include "../../utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 constexpr bool test() {
   types::for_each(types::vectorizable_types{}, []<class T> {
@@ -27,8 +27,8 @@ constexpr bool test() {
       std::array<T, N> arr;
       for (size_t i = 0; i != N; ++i)
         arr[i] = i % 2 == 0 ? 1 : 0;
-      const dp::simd<T, N> vec(arr); // make sure operator! is const
-      std::same_as<dp::simd_mask<T, N>> auto&& ret = !vec;
+      const stdx::vec<T, N> vec(arr); // make sure operator! is const
+      std::same_as<stdx::mask<T, N>> auto&& ret = !vec;
       for (int i = 0; i != N; ++i)
         assert(ret[i] == (i % 2 == 1));
     });

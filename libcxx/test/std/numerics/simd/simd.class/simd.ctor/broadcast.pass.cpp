@@ -18,10 +18,10 @@
 #include "type_algorithms.h"
 #include "../../utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 template <class SimdT, class Arg>
-concept has_broadcast_constructor = requires { dp::simd<SimdT>(std::declval<Arg>()); };
+concept has_broadcast_constructor = requires { stdx::vec<SimdT>(std::declval<Arg>()); };
 
 static_assert(has_broadcast_constructor<int32_t, int16_t>);
 static_assert(has_broadcast_constructor<double, float>);
@@ -47,7 +47,7 @@ struct almost_constexpr_wrapper_like {
   friend constexpr bool operator==(almost_constexpr_wrapper_like, almost_constexpr_wrapper_like) = default;
   friend constexpr bool operator==(almost_constexpr_wrapper_like lhs, int rhs) { return lhs.value == rhs; }
 };
-LIBCPP_STATIC_ASSERT(!dp::__constexpr_wrapper_like<almost_constexpr_wrapper_like>);
+LIBCPP_STATIC_ASSERT(!stdxx::__constexpr_wrapper_like<almost_constexpr_wrapper_like>);
 
 static_assert(has_broadcast_constructor<int, almost_constexpr_wrapper_like>);
 static_assert(has_broadcast_constructor<float, almost_constexpr_wrapper_like>);
@@ -61,7 +61,7 @@ struct constexpr_wrapper_like {
   friend constexpr bool operator==(constexpr_wrapper_like, constexpr_wrapper_like) = default;
   friend constexpr bool operator==(constexpr_wrapper_like lhs, T rhs) { return lhs.value == rhs; }
 };
-LIBCPP_STATIC_ASSERT(dp::__constexpr_wrapper_like<constexpr_wrapper_like<int, 1>>);
+LIBCPP_STATIC_ASSERT(stdx::__constexpr_wrapper_like<constexpr_wrapper_like<int, 1>>);
 
 static_assert(!has_broadcast_constructor<int, constexpr_wrapper_like<std::monostate, std::monostate{}>>);
 static_assert(!has_broadcast_constructor<int, constexpr_wrapper_like<float, 3.4f>>);
@@ -71,7 +71,7 @@ static_assert(has_broadcast_constructor<float, constexpr_wrapper_like<float, 3.4
 template <class T>
 constexpr void test() {
   simd_utils::test_sizes([]<int N>(std::integral_constant<int, N>) {
-    dp::simd<T, N> vec(T(1));
+    stdx::vec<T, N> vec(T(1));
     for (auto i = 0; i != vec.size(); ++i)
       assert(vec[i] == T(1));
   });

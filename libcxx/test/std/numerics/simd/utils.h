@@ -14,6 +14,7 @@
 #include <type_traits>
 
 #include "type_algorithms.h"
+#include "../../../../include/simd"
 
 namespace types {
 using vectorizable_float_types = type_list<float, double>;
@@ -36,11 +37,11 @@ constexpr void test_sizes(Func f) {
 }
 
 template <std::size_t N>
-constexpr std::datapar::simd_mask<int, N> make_mask(std::array<bool, N> bools) {
+constexpr std::simd::mask<int, N> make_mask(std::array<bool, N> bools) {
   std::array<int, N> bools_as_int;
   for (size_t i = 0; i != N; ++i)
     bools_as_int[i] = bools[i] ? 1 : 0;
-  return std::datapar::simd<int, N>(1) == std::datapar::simd<int, N>(bools_as_int);
+  return std::simd::vec<int, N>(1) == std::simd::vec<int, N>(bools_as_int);
 }
 } // namespace simd_utils
 

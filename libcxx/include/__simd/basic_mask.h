@@ -134,6 +134,9 @@ reduce_max_index(const basic_mask<_Bytes, _Abi>& __mask) noexcept {
 }
 
 _LIBCPP_DIAGNOSTIC_POP
+template <class _Tp, class _Abi>
+class basic_vec;
+
 template <class _Tp, __simd_size_type _Np = __simd_size_v<_Tp, __native_abi<_Tp>>>
 using mask = basic_vec<_Tp, __deduce_abi_t<_Tp, _Np>>::mask_type;
 

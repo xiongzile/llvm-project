@@ -19,14 +19,14 @@
 #include "type_algorithms.h"
 #include "../../utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 template <class T>
 constexpr void test() {
   simd_utils::test_sizes([]<int N>(std::integral_constant<int, N>) {
     std::array<T, N> arr;
     std::iota(std::begin(arr), std::end(arr), 0);
-    dp::simd<T, N> vec(arr);
+    stdx::vec<T, N> vec(arr);
     for (auto i = 0; i != vec.size(); ++i)
       assert(vec[i] == T(i));
   });

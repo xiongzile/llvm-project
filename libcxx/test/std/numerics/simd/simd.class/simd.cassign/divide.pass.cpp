@@ -19,16 +19,16 @@
 #include "type_algorithms.h"
 #include "../../utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 constexpr bool test() {
   types::for_each(types::vectorizable_types{}, []<class T> {
     simd_utils::test_sizes([]<int N>(std::integral_constant<int, N>) {
       std::array<T, N> arr;
       std::iota(std::begin(arr), std::end(arr), 55);
-      dp::simd<T, N> vec(arr);
-      const dp::simd<T, N> vec2(T(6)); // make sure operator- is const
-      std::same_as<dp::simd<T, N>&> auto&& ret = vec /= vec2;
+      stdx::vec<T, N> vec(arr);
+      const stdx::vec<T, N> vec2(T(6)); // make sure operator- is const
+      std::same_as<stdx::vec<T, N>&> auto&& ret = vec /= vec2;
       assert(&ret == &vec);
       for (int i = 0; i != N; ++i)
         assert(ret[i] == T(i + 55) / 6);

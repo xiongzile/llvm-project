@@ -17,17 +17,17 @@
 #include "type_algorithms.h"
 #include "../../utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 constexpr bool test() {
   types::for_each(types::vectorizable_types{}, []<class T>() {
     {
-      dp::simd_mask<T> vec(true);
+      stdx::mask<T> vec(true);
       for (auto i = 0; i != vec.size(); ++i)
         assert(vec[i]);
     }
     {
-      dp::simd_mask<T> vec(false);
+      stdx::mask<T> vec(false);
       for (auto i = 0; i != vec.size(); ++i)
         assert(!vec[i]);
     }

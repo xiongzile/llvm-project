@@ -8,7 +8,7 @@
 
 // <simd>
 
-// Test hardening assertions for std::datapar::simd.
+// Test hardening assertions for std::simd.
 
 // REQUIRES: has-unix-headers
 // UNSUPPORTED: libcpp-hardening-mode=none
@@ -21,11 +21,11 @@
 #include "check_assertion.h"
 #include "../utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 int main(int, char**) {
   simd_utils::test_sizes([]<int N>(std::integral_constant<int, N>) {
-    dp::simd<int, N> vec;
+    stdx::vec<int, N> vec;
     TEST_LIBCPP_ASSERT_FAILURE(vec[-1], "simd::operator[] out of bounds");
     TEST_LIBCPP_ASSERT_FAILURE(vec[N], "simd::operator[] out of bounds");
     TEST_LIBCPP_ASSERT_FAILURE(vec[N + 1], "simd::operator[] out of bounds");

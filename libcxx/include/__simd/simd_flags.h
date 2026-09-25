@@ -90,13 +90,13 @@ struct flags {
   }
 };
 
-inline constexpr flags<> simd_flag_default{};
-inline constexpr flags<__convert_flag> simd_flag_convert{};
-inline constexpr flags<__aligned_flag> simd_flag_aligned{};
+inline constexpr flags<> flag_default{};
+inline constexpr flags<__convert_flag> flag_convert{};
+inline constexpr flags<__aligned_flag> flag_aligned{};
 
 template <size_t _Np>
   requires(std::has_single_bit(_Np))
-inline constexpr flags<__overaligned_flag<_Np>> simd_flag_overaligned{};
+inline constexpr flags<__overaligned_flag<_Np>> flag_overaligned{};
 
 } // namespace datapar
 _LIBCPP_END_NAMESPACE_STD

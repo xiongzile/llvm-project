@@ -14,18 +14,18 @@
 #include "type_algorithms.h"
 #include "../utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 template <class T>
 constexpr void test() {
   { // check size deduction
-    using simd_t = dp::simd_mask<T>;
+    using simd_t = stdx::mask<T>;
     static_assert(std::is_trivially_copyable_v<simd_t>);
   }
 
   { // check a few explicit sizes
     simd_utils::test_sizes([]<int N>(std::integral_constant<int, N>) {
-      static_assert(std::is_trivially_copyable_v<dp::simd_mask<T, N>>);
+      static_assert(std::is_trivially_copyable_v<stdx::mask<T, N>>);
     });
   }
 }

@@ -19,7 +19,7 @@
 #include "type_algorithms.h"
 #include "../../../std/numerics/simd/utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 template <class T>
 constexpr void test() {

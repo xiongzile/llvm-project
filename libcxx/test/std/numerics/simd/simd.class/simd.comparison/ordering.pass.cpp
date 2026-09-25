@@ -19,30 +19,30 @@
 #include "type_algorithms.h"
 #include "../../utils.h"
 
-namespace dp = std::datapar;
+namespace stdx = std::simd;
 
 template <class T, std::size_t N>
-constexpr void test(dp::simd<T, N> lhs, dp::simd<T, N> rhs, std::array<bool, N> expected) {
+constexpr void test(stdx::vec<T, N> lhs, stdx::vec<T, N> rhs, std::array<bool, N> expected) {
   { // Test operator<
-    std::same_as<typename dp::simd<T, N>::mask_type> auto result = lhs < rhs;
+    std::same_as<typename stdx::vec<T, N>::mask_type> auto result = lhs < rhs;
     for (size_t i = 0; i != N; ++i) {
       assert(result[i] == expected[i]);
     }
   }
   { // Test operator>
-    std::same_as<typename dp::simd<T, N>::mask_type> auto result = rhs > lhs;
+    std::same_as<typename stdx::vec<T, N>::mask_type> auto result = rhs > lhs;
     for (size_t i = 0; i != N; ++i) {
       assert(result[i] == expected[i]);
     }
   }
   { // Test operator>=
-    std::same_as<typename dp::simd<T, N>::mask_type> auto result = lhs >= rhs;
+    std::same_as<typename stdx::vec<T, N>::mask_type> auto result = lhs >= rhs;
     for (size_t i = 0; i != N; ++i) {
       assert(result[i] == !expected[i]);
     }
   }
   { // Test operator<=
-    std::same_as<typename dp::simd<T, N>::mask_type> auto result = rhs <= lhs;
+    std::same_as<typename stdx::vec<T, N>::mask_type> auto result = rhs <= lhs;
     for (size_t i = 0; i != N; ++i) {
       assert(result[i] == !expected[i]);
     }
@@ -58,12 +58,12 @@ constexpr bool test() {
   });
   types::for_each(types::vectorizable_float_types{}, []<class T> {
     constexpr auto nan = std::numeric_limits<T>::quiet_NaN();
-    dp::simd<T, 4> a = std::array<T, 4>{nan, nan, nan, nan};
-    dp::simd<T, 4> b = a;
-    assert(dp::none_of(a < b));
-    assert(dp::none_of(a > b));
-    assert(dp::none_of(a <= b));
-    assert(dp::none_of(a >= b));
+    stdx::vec<T, 4> a = std::array<T, 4>{nan, nan, nan, nan};
+    stdx::vec<T, 4> b = a;
+    assert(stdx::none_of(a < b));
+    assert(stdx::none_of(a > b));
+    assert(stdx::none_of(a <= b));
+    assert(stdx::none_of(a >= b));
   });
 
   return true;
