@@ -56,6 +56,9 @@ using __native_abi = __deduce_abi<_Tp>::template __apply<4>;
 template <class _Tp, class _Abi>
 inline constexpr __simd_size_type __simd_size_v = 0;
 
+template <size_t _Bytes, class _Abi>
+inline constexpr __simd_size_type __mask_size_v = 0;
+
 template <size_t>
 struct __integer_from_impl;
 
@@ -91,6 +94,11 @@ struct __vector_size_abi {
 
   _LIBCPP_ALWAYS_INLINE constexpr _SimdT __select(_MaskT __mask, _SimdT __true, _SimdT __false) {
     return __mask ? __true : __false;
+  }
+
+  template <class _Vec>
+  _LIBCPP_ALWAYS_INLINE static constexpr _MaskT __to_mask(_Vec __vec) noexcept {
+    return __builtin_convertvector(__vec, _MaskT);
   }
 
 #  ifdef _LIBCPP_COMPILER_CLANG_BASED
@@ -156,6 +164,12 @@ struct __deduce_abi<_Tp> {
 
 template <class _Tp, __simd_size_type _Np>
 inline constexpr __simd_size_type __simd_size_v<_Tp, __vector_size_abi<_Tp, _Np>> = _Np;
+
+
+template <size_t _Bytes, class _Tp, __simd_size_type _Np>
+  requires(_Bytes == sizeof(_Tp))
+inline constexpr __simd_size_type
+    __mask_size_v<_Bytes, __vector_size_abi<_Tp, _Np>> = _Np;
 
 } // namespace datapar
 _LIBCPP_END_NAMESPACE_STD

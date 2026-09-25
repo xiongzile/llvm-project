@@ -9,8 +9,6 @@
 #ifndef _LIBCPP___SIMD_basic_vec_H
 #define _LIBCPP___SIMD_basic_vec_H
 
-#include "basic_mask.h"
-
 #include <__assert>
 #include <__concepts/convertible_to.h>
 #include <__config>
@@ -145,7 +143,7 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr mask_type operator!() const noexcept
     requires requires(value_type __v) { !__v; }
   {
-    return mask_type(!__data_);
+    return mask_type(abi_type::__to_mask(!__data_));
   }
 
   _LIBCPP_HIDE_FROM_ABI constexpr basic_vec operator~() const noexcept
@@ -306,37 +304,37 @@ public:
   _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator==(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v == __v; }
   {
-    return mask_type(__lhs.__data_ == __rhs.__data_);
+    return mask_type(abi_type::__to_mask(__lhs.__data_ == __rhs.__data_));
   }
 
   _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator!=(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v != __v; }
   {
-    return mask_type(!(__lhs.__data_ == __rhs.__data_));
+    return mask_type(abi_type::__to_mask(!(__lhs.__data_ == __rhs.__data_)));
   }
 
   _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator<(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v < __v; }
   {
-    return mask_type(__lhs.__data_ < __rhs.__data_);
+    return mask_type(abi_type::__to_mask(__lhs.__data_ < __rhs.__data_));
   }
 
   _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator>=(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v >= __v; }
   {
-    return mask_type(__rhs.__data_ <= __lhs.__data_);
+    return mask_type(abi_type::__to_mask(__rhs.__data_ <= __lhs.__data_));
   }
 
   _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator>(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v > __v; }
   {
-    return mask_type(__rhs.__data_ < __lhs.__data_);
+    return mask_type(abi_type::__to_mask(__rhs.__data_ < __lhs.__data_));
   }
 
   _LIBCPP_HIDE_FROM_ABI friend constexpr mask_type operator<=(const basic_vec& __lhs, const basic_vec& __rhs) noexcept
     requires requires(value_type __v) { __v <= __v; }
   {
-    return mask_type(__lhs.__data_ <= __rhs.__data_);
+    return mask_type(abi_type::__to_mask(__lhs.__data_ <= __rhs.__data_));
   }
 };
 _LIBCPP_DIAGNOSTIC_POP

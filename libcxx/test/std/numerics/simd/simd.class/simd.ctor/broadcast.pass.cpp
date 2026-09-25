@@ -47,7 +47,7 @@ struct almost_constexpr_wrapper_like {
   friend constexpr bool operator==(almost_constexpr_wrapper_like, almost_constexpr_wrapper_like) = default;
   friend constexpr bool operator==(almost_constexpr_wrapper_like lhs, int rhs) { return lhs.value == rhs; }
 };
-LIBCPP_STATIC_ASSERT(!stdxx::__constexpr_wrapper_like<almost_constexpr_wrapper_like>);
+LIBCPP_STATIC_ASSERT(!stdx::__constexpr_wrapper_like<almost_constexpr_wrapper_like>);
 
 static_assert(has_broadcast_constructor<int, almost_constexpr_wrapper_like>);
 static_assert(has_broadcast_constructor<float, almost_constexpr_wrapper_like>);

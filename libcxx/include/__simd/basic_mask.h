@@ -34,7 +34,7 @@ public:
   using value_type = bool;
   using abi_type   = _Abi;
 
-  static constexpr integral_constant<__simd_size_type, __simd_size_v<__integer_from<_Bytes>, abi_type>> size{};
+  static constexpr integral_constant<__simd_size_type, __mask_size_v<_Bytes, abi_type>> size{};
 
 private:
   using __data_t = abi_type::_MaskT;
@@ -97,7 +97,7 @@ public:
 };
 
 template <class _Tp, __simd_size_type _Np = __simd_size_v<_Tp, __native_abi<_Tp>>>
-using simd_mask = basic_mask<sizeof(_Tp), __deduce_abi_t<_Tp, _Np>>;
+using mask = basic_mask<sizeof(_Tp), __deduce_abi_t<_Tp, _Np>>;
 
 // [simd.mask.reductions]
 
@@ -134,11 +134,6 @@ reduce_max_index(const basic_mask<_Bytes, _Abi>& __mask) noexcept {
 }
 
 _LIBCPP_DIAGNOSTIC_POP
-template <class _Tp, class _Abi>
-class basic_vec;
-
-template <class _Tp, __simd_size_type _Np = __simd_size_v<_Tp, __native_abi<_Tp>>>
-using mask = basic_vec<_Tp, __deduce_abi_t<_Tp, _Np>>::mask_type;
 
 } // namespace datapar
 _LIBCPP_END_NAMESPACE_STD
